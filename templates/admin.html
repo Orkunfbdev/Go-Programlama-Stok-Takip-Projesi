@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html class="dark" lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KINETIC OVERDRIVE - Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@600;700;800&family=Hanken+Grotesk:wght@400&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#131315;color:#e5e1e4;font-family:'Hanken Grotesk',sans-serif;min-height:100vh;display:flex;overflow:hidden}
+  .sidebar{width:240px;flex-shrink:0;background:#0e0e10;border-right:1px solid #2a3b3c;height:100vh;position:fixed;left:0;top:0;display:flex;flex-direction:column;padding:32px 0}
+  .sidebar-logo{padding:0 24px 32px;font-family:'Geist',sans-serif;font-size:18px;font-weight:800;color:#00dbe9;letter-spacing:-0.5px}
+  .sidebar-logo span{display:block;font-size:11px;color:#6a8a8b;font-family:'JetBrains Mono',monospace;font-weight:500;margin-top:2px;letter-spacing:2px}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:12px 24px;color:#7a9a9b;font-size:13px;font-family:'JetBrains Mono',monospace;text-decoration:none;transition:all 0.2s;cursor:pointer;border:none;background:none;width:100%}
+  .nav-item:hover{background:#1a1a2a;color:#e5e1e4}
+  .nav-item.active{background:rgba(157,5,255,0.15);color:#dfb7ff;border-right:3px solid #9d05ff}
+  .nav-item .icon{font-family:'Material Symbols Outlined';font-size:20px}
+  .sidebar-bottom{margin-top:auto;padding:0 24px}
+  .admin-badge{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid #2a3b3c;margin-top:16px}
+  .admin-avatar{width:32px;height:32px;border-radius:50%;background:#1a1a2a;border:1px solid #00dbe9;display:flex;align-items:center;justify-content:center;font-family:'Material Symbols Outlined';font-size:16px;color:#00dbe9}
+  .admin-name{font-size:12px;font-family:'JetBrains Mono',monospace;color:#e5e1e4}
+  .admin-status{font-size:10px;color:#00dbe9}
+  main{flex:1;margin-left:240px;height:100vh;overflow-y:auto;padding:40px 48px}
+  h1{font-family:'Geist',sans-serif;font-size:36px;font-weight:800;color:#e5e1e4;margin-bottom:6px}
+  .sub{color:#7a9a9b;font-size:14px;margin-bottom:32px}
+  /* Stats */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px}
+  .stat{background:rgba(28,28,38,0.7);border:1px solid #2a3b3c;border-radius:12px;padding:20px;position:relative;overflow:hidden}
+  .stat::before{content:'';position:absolute;inset:-1px;border-radius:12px;padding:1px;background:linear-gradient(135deg,rgba(0,219,233,0.4),transparent);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+  .stat-label{font-size:11px;font-family:'JetBrains Mono',monospace;color:#7a9a9b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+  .stat-label .icon{font-family:'Material Symbols Outlined';font-size:18px;color:#00dbe9}
+  .stat-value{font-family:'Geist',sans-serif;font-size:36px;font-weight:800;color:#e5e1e4}
+  .stat-value.cyan{color:#00dbe9}
+  .stat-value.yellow{color:#fbbf24}
+  .stat-value.red{color:#f87171}
+  /* Add product form */
+  .add-form{background:rgba(28,28,38,0.7);border:1px solid #2a3b3c;border-radius:12px;padding:24px;margin-bottom:28px}
+  .add-form h2{font-family:'Geist',sans-serif;font-size:18px;font-weight:700;color:#e5e1e4;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .add-form h2 .icon{font-family:'Material Symbols Outlined';font-size:20px;color:#00dbe9}
+  .form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .form-full{grid-column:1/-1}
+  .field label{display:block;font-size:11px;font-family:'JetBrains Mono',monospace;color:#7a9a9b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+  .field input,.field select{width:100%;background:#0e0e10;border:1px solid #2a3b3c;color:#e5e1e4;padding:9px 12px;border-radius:6px;font-size:13px;font-family:'Hanken Grotesk',sans-serif;outline:none;transition:border-color 0.2s}
+  .field input:focus,.field select:focus{border-color:#00dbe9}
+  .field select option{background:#0e0e10}
+  .btn-add{background:#00dbe9;color:#002022;border:none;padding:10px 24px;border-radius:6px;font-size:12px;font-family:'JetBrains Mono',monospace;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px}
+  .btn-add:hover{box-shadow:0 0 16px rgba(0,219,233,0.5);transform:translateY(-1px)}
+  .btn-add .icon{font-family:'Material Symbols Outlined';font-size:16px}
+  /* Table */
+  .table-wrap{background:rgba(28,28,38,0.7);border:1px solid #2a3b3c;border-radius:12px;overflow:hidden}
+  .table-head{padding:16px 24px;border-bottom:1px solid #2a3b3c;display:flex;justify-content:space-between;align-items:center;background:rgba(15,15,25,0.5)}
+  .table-head h2{font-family:'Geist',sans-serif;font-size:16px;font-weight:700;color:#e5e1e4}
+  table{width:100%;border-collapse:collapse}
+  thead th{background:#0a0a14;padding:12px 16px;text-align:left;font-size:10px;font-family:'JetBrains Mono',monospace;color:#7a9a9b;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #1e2e2f}
+  tbody tr{border-bottom:1px solid #1a2a2b;transition:background 0.15s}
+  tbody tr:last-child{border-bottom:none}
+  tbody tr:hover{background:rgba(0,219,233,0.03)}
+  td{padding:12px 16px;vertical-align:middle}
+  .prod-cell{display:flex;align-items:center;gap:10px}
+  .prod-thumb{width:40px;height:40px;border-radius:6px;object-fit:cover;border:1px solid #2a3b3c}
+  .prod-name{font-size:13px;font-weight:600;color:#e5e1e4}
+  .prod-sku{font-size:10px;font-family:'JetBrains Mono',monospace;color:#7a9a9b;margin-top:2px}
+  .badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:600;letter-spacing:0.5px}
+  .badge-ok{background:rgba(0,219,233,0.12);color:#00dbe9}
+  .badge-low{background:rgba(251,191,36,0.12);color:#fbbf24}
+  .badge-out{background:rgba(248,113,113,0.15);color:#f87171;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+  /* Inline edit inputs - DARK */
+  .edit-input{background:#0e0e10;border:1px solid #2a3b3c;color:#e5e1e4;padding:7px 10px;border-radius:6px;font-size:12px;font-family:'JetBrains Mono',monospace;width:100px;outline:none;transition:border-color 0.2s}
+  .edit-input:focus{border-color:#00dbe9}
+  .btn-save{background:#00dbe9;color:#002022;border:none;padding:7px 14px;border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;font-weight:700;text-transform:uppercase;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+  .btn-save:hover{box-shadow:0 0 10px rgba(0,219,233,0.4)}
+  .btn-del{background:rgba(248,113,113,0.1);color:#f87171;border:1px solid rgba(248,113,113,0.3);padding:7px 10px;border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+  .btn-del:hover{background:rgba(248,113,113,0.2)}
+  .table-foot{padding:12px 24px;border-top:1px solid #1e2e2f;display:flex;justify-content:space-between;align-items:center;background:rgba(10,10,20,0.4);font-size:12px;font-family:'JetBrains Mono',monospace;color:#7a9a9b}
+  /* Scrollbar */
+  main::-webkit-scrollbar{width:6px}
+  main::-webkit-scrollbar-track{background:#0a0a14}
+  main::-webkit-scrollbar-thumb{background:#2a3b3c;border-radius:3px}
+  main::-webkit-scrollbar-thumb:hover{background:#00dbe9}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">OVERDRIVE<span>COMMAND CENTER</span></div>
+  <a class="nav-item" href="/"><span class="icon">home</span> Ana Sayfa</a>
+  <a class="nav-item" href="/systems"><span class="icon">inventory_2</span> Sistemler</a>
+  <a class="nav-item active"><span class="icon">analytics</span> Stok Kontrol</a>
+  <a class="nav-item" href="/cart"><span class="icon">shopping_cart</span> Sepet</a>
+  <div class="sidebar-bottom">
+    <a class="nav-item" href="/logout" style="color:#f87171"><span class="icon">logout</span> Çıkış Yap</a>
+    <div class="admin-badge">
+      <div class="admin-avatar">person</div>
+      <div><div class="admin-name">SYS_ADMIN_01</div><div class="admin-status">● ONLINE</div></div>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <h1>Stock Control</h1>
+  <p class="sub">Stok ve fiyatları yönet, yeni ürün ekle.</p>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Toplam Ürün <span class="icon">inventory_2</span></div>
+      <div class="stat-value cyan">{{len .}}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Düşük Stok (≤5) <span class="icon">warning</span></div>
+      <div class="stat-value yellow">{{$low := 0}}{{range .}}{{if le .Stock 5}}{{$low = add $low 1}}{{end}}{{end}}{{$low}}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Tükenen Ürün <span class="icon">remove_shopping_cart</span></div>
+      <div class="stat-value red">{{$out := 0}}{{range .}}{{if eq .Stock 0}}{{$out = add $out 1}}{{end}}{{end}}{{$out}}</div>
+    </div>
+  </div>
+
+  <!-- Yeni Ürün Ekle -->
+  <div class="add-form">
+    <h2><span class="icon">add_circle</span> Yeni Ürün Ekle</h2>
+    <form method="POST" action="/admin/add">
+      <div class="form-grid">
+        <div class="field">
+          <label>Ürün Adı</label>
+          <input type="text" name="name" placeholder="örn: RTX 5090 PC" required>
+        </div>
+        <div class="field">
+          <label>Fiyat (TL)</label>
+          <input type="number" name="price" placeholder="45000" min="0" required>
+        </div>
+        <div class="field">
+          <label>Stok Adedi</label>
+          <input type="number" name="stock" placeholder="10" min="0" required>
+        </div>
+        <div class="field">
+          <label>Kategori</label>
+          <select name="category">
+            <option value="Bilgisayar">Bilgisayar</option>
+            <option value="Telefon">Telefon</option>
+            <option value="Tablet">Tablet</option>
+            <option value="Monitor">Monitör</option>
+            <option value="Aksesuar">Aksesuar</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Resim URL</label>
+          <input type="text" name="image" placeholder="https://images.unsplash.com/...">
+        </div>
+        <div class="field">
+          <label>Kısa Açıklama</label>
+          <input type="text" name="desc" placeholder="Ürün açıklaması">
+        </div>
+      </div>
+      <div style="margin-top:16px">
+        <button type="submit" class="btn-add"><span class="icon">add</span> Ürünü Ekle</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Ürün Tablosu -->
+  <div class="table-wrap">
+    <div class="table-head">
+      <h2>Inventory Matrix</h2>
+      <span style="font-size:11px;font-family:'JetBrains Mono',monospace;color:#7a9a9b">Fiyat & Stok → Kaydet</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Ürün</th>
+          <th>Kategori</th>
+          <th>Stok</th>
+          <th>Fiyat (TL)</th>
+          <th>Yeni Stok</th>
+          <th style="text-align:right">İşlem</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .}}
+        <tr>
+          <td>
+            <div class="prod-cell">
+              <img class="prod-thumb" src="{{.Image}}" alt="{{.Name}}">
+              <div>
+                <div class="prod-name">{{.Name}}</div>
+                <div class="prod-sku">SKU-{{printf "%04d" .ID}}</div>
+              </div>
+            </div>
+          </td>
+          <td style="color:#7a9a9b;font-size:13px">{{.Category}}</td>
+          <td>
+            {{if gt .Stock 5}}
+              <span class="badge badge-ok">✓ {{.Stock}} adet</span>
+            {{else if gt .Stock 0}}
+              <span class="badge badge-low">⚠ {{.Stock}} adet</span>
+            {{else}}
+              <span class="badge badge-out">✕ Tükendi</span>
+            {{end}}
+          </td>
+          <td colspan="3">
+            <form method="POST" action="/admin/update" style="display:flex;align-items:center;gap:8px">
+              <input type="hidden" name="id" value="{{.ID}}">
+              <input class="edit-input" type="number" name="price" value="{{printf "%.0f" .Price}}" min="0">
+              <input class="edit-input" type="number" name="stock" value="{{.Stock}}" min="0">
+              <button class="btn-save" type="submit">Kaydet</button>
+              <form method="POST" action="/admin/delete" style="display:inline">
+                <input type="hidden" name="id" value="{{.ID}}">
+                <button class="btn-del" type="submit">Sil</button>
+              </form>
+            </form>
+          </td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+    <div class="table-foot">
+      <span>{{len .}} ürün · admin / 1234</span>
+      <a href="/" style="color:#00dbe9;text-decoration:none">← Siteye Dön</a>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>
