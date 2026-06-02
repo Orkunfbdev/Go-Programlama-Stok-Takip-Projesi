@@ -106,16 +106,40 @@
   <div class="stats">
     <div class="stat">
       <div class="stat-label">Toplam Ürün <span>📦</span></div>
-      <div class="stat-value cyan">{{len .}}</div>
+      <div class="stat-value cyan">{{len .Products}}</div>
     </div>
     <div class="stat">
       <div class="stat-label">Düşük Stok (≤5) <span>⚠️</span></div>
-      <div class="stat-value yellow">{{$low := 0}}{{range .}}{{if le .Stock 5}}{{$low = add $low 1}}{{end}}{{end}}{{$low}}</div>
+      <div class="stat-value yellow">{{$low := 0}}{{range .Products}}{{if le .Stock 5}}{{$low = add $low 1}}{{end}}{{end}}{{$low}}</div>
     </div>
     <div class="stat">
       <div class="stat-label">Tükenen Ürün <span>🚫</span></div>
-      <div class="stat-value red">{{$out := 0}}{{range .}}{{if eq .Stock 0}}{{$out = add $out 1}}{{end}}{{end}}{{$out}}</div>
+      <div class="stat-value red">{{$out := 0}}{{range .Products}}{{if eq .Stock 0}}{{$out = add $out 1}}{{end}}{{end}}{{$out}}</div>
     </div>
+  </div>
+
+  <!-- Kategori Yönetimi -->
+  <div class="add-form" style="margin-bottom:28px">
+    <h2>🏷️ Kategori Yönetimi</h2>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      {{range .Categories}}
+      <div style="display:flex;align-items:center;gap:6px;background:#0e0e10;border:1px solid #2a3b3c;border-radius:8px;padding:6px 12px">
+        <form method="POST" action="/admin/categories/edit" style="display:flex;gap:6px;align-items:center">
+          <input type="hidden" name="id" value="{{.ID}}">
+          <input class="edit-input" type="text" name="name" value="{{.Name}}" style="width:120px">
+          <button class="btn-save" type="submit">Düzenle</button>
+        </form>
+        <form method="POST" action="/admin/categories/delete">
+          <input type="hidden" name="id" value="{{.ID}}">
+          <button class="btn-del" type="submit">✕</button>
+        </form>
+      </div>
+      {{end}}
+    </div>
+    <form method="POST" action="/admin/categories/add" style="display:flex;gap:8px;align-items:center">
+      <input class="edit-input" type="text" name="name" placeholder="Yeni kategori..." style="width:200px" required>
+      <button class="btn-add" type="submit">➕ Ekle</button>
+    </form>
   </div>
 
   <!-- Yeni Ürün Ekle -->
@@ -138,11 +162,9 @@
         <div class="field">
           <label>Kategori</label>
           <select name="category">
-            <option value="Bilgisayar">Bilgisayar</option>
-            <option value="Telefon">Telefon</option>
-            <option value="Tablet">Tablet</option>
-            <option value="Monitor">Monitör</option>
-            <option value="Aksesuar">Aksesuar</option>
+            {{range .Categories}}
+            <option value="{{.Name}}">{{.Name}}</option>
+            {{end}}
           </select>
         </div>
         <div class="field">
@@ -155,7 +177,7 @@
         </div>
       </div>
       <div style="margin-top:16px">
-        <button type="submit" class="btn-add"><span class="icon">add</span> Ürünü Ekle</button>
+        <button type="submit" class="btn-add">➕ Ürünü Ekle</button>
       </div>
     </form>
   </div>
@@ -178,7 +200,7 @@
         </tr>
       </thead>
       <tbody>
-        {{range .}}
+        {{range .Products}}
         <tr>
           <td>
             <div class="prod-cell">
@@ -200,10 +222,17 @@
             {{end}}
           </td>
           <td colspan="3">
-            <form method="POST" action="/admin/update" style="display:flex;align-items:center;gap:8px">
+            <form method="POST" action="/admin/update" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
               <input type="hidden" name="id" value="{{.ID}}">
-              <input class="edit-input" type="number" name="price" value="{{printf "%.0f" .Price}}" min="0">
-              <input class="edit-input" type="number" name="stock" value="{{.Stock}}" min="0">
+              <input class="edit-input" type="text" name="name" value="{{.Name}}" style="width:140px" placeholder="Ürün adı">
+              <select class="edit-input" name="category" style="width:120px">
+                {{$cur := .Category}}
+                {{range $.Categories}}
+                <option value="{{.Name}}" {{if eq .Name $cur}}selected{{end}}>{{.Name}}</option>
+                {{end}}
+              </select>
+              <input class="edit-input" type="number" name="price" value="{{printf "%.0f" .Price}}" min="0" style="width:90px">
+              <input class="edit-input" type="number" name="stock" value="{{.Stock}}" min="0" style="width:80px">
               <button class="btn-save" type="submit">Kaydet</button>
               <form method="POST" action="/admin/delete" style="display:inline">
                 <input type="hidden" name="id" value="{{.ID}}">
@@ -216,7 +245,7 @@
       </tbody>
     </table>
     <div class="table-foot">
-      <span>{{len .}} ürün · admin / 1234</span>
+      <span>{{len .Products}} ürün</span>
       <a href="/" style="color:#00dbe9;text-decoration:none">← Siteye Dön</a>
     </div>
   </div>

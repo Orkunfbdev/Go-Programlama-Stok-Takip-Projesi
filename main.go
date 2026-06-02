@@ -21,6 +21,10 @@ type Product struct {
 	Image    string
 	Desc     string
 }
+type Category struct {
+	ID   int
+	Name string
+}
 type CartItem struct {
 	Product  Product
 	Qty      int
@@ -33,6 +37,10 @@ type CartPageData struct {
 	Error   string
 }
 type HomeData struct{ Featured []Product }
+type AdminPageData struct {
+	Products   []Product
+	Categories []Category
+}
 
 var db *sql.DB
 
@@ -89,6 +97,23 @@ func getProducts() ([]Product, error) {
 			return nil, err
 		}
 		list = append(list, p)
+	}
+	return list, nil
+}
+
+func getCategories() ([]Category, error) {
+	rows, err := db.Query(`SELECT id, isim FROM public.categories ORDER BY isim ASC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var list []Category
+	for rows.Next() {
+		var c Category
+		if err := rows.Scan(&c.ID, &c.Name); err != nil {
+			return nil, err
+		}
+		list = append(list, c)
 	}
 	return list, nil
 }
@@ -232,12 +257,17 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
-	list, err := getProducts()
+	products, err := getProducts()
 	if err != nil {
 		http.Error(w, "Veritabanı hatası: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	tmpl.ExecuteTemplate(w, "admin.html", list)
+	categories, err := getCategories()
+	if err != nil {
+		http.Error(w, "Veritabanı hatası: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tmpl.ExecuteTemplate(w, "admin.html", AdminPageData{Products: products, Categories: categories})
 }
 
 func updateHandler(w http.ResponseWriter, r *http.Request) {
@@ -249,7 +279,9 @@ func updateHandler(w http.ResponseWriter, r *http.Request) {
 		id, _ := strconv.Atoi(r.FormValue("id"))
 		stock, _ := strconv.Atoi(r.FormValue("stock"))
 		price, _ := strconv.ParseFloat(r.FormValue("price"), 64)
-		_, err := db.Exec("UPDATE public.products SET stok = $1, fiyat = $2 WHERE id = $3", stock, price, id)
+		name := strings.TrimSpace(r.FormValue("name"))
+		category := r.FormValue("category")
+		_, err := db.Exec("UPDATE public.products SET isim = $1, stok = $2, fiyat = $3, kategori = $4 WHERE id = $5", name, stock, price, category, id)
 		if err != nil {
 			log.Println("Update error:", err)
 		}
@@ -294,6 +326,56 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
+func addCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	if !isAdmin(r) {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+	if r.Method == "POST" {
+		name := strings.TrimSpace(r.FormValue("name"))
+		if name != "" {
+			_, err := db.Exec(`INSERT INTO public.categories (isim) VALUES ($1) ON CONFLICT (isim) DO NOTHING`, name)
+			if err != nil {
+				log.Println("Category insert error:", err)
+			}
+		}
+	}
+	http.Redirect(w, r, "/admin", http.StatusFound)
+}
+
+func deleteCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	if !isAdmin(r) {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+	if r.Method == "POST" {
+		id, _ := strconv.Atoi(r.FormValue("id"))
+		_, err := db.Exec("DELETE FROM public.categories WHERE id = $1", id)
+		if err != nil {
+			log.Println("Category delete error:", err)
+		}
+	}
+	http.Redirect(w, r, "/admin", http.StatusFound)
+}
+
+func editCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	if !isAdmin(r) {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+	if r.Method == "POST" {
+		id, _ := strconv.Atoi(r.FormValue("id"))
+		name := strings.TrimSpace(r.FormValue("name"))
+		if name != "" {
+			_, err := db.Exec("UPDATE public.categories SET isim = $1 WHERE id = $2", name, id)
+			if err != nil {
+				log.Println("Category update error:", err)
+			}
+		}
+	}
+	http.Redirect(w, r, "/admin", http.StatusFound)
+}
+
 func ensureDatabaseSchema() error {
 	if err := renameTrimmedTable("products"); err != nil {
 		return err
@@ -319,6 +401,16 @@ func ensureDatabaseSchema() error {
 			id SERIAL PRIMARY KEY,
 			"kullanıcıadı" TEXT NOT NULL UNIQUE,
 			"şifre" TEXT NOT NULL
+		)
+	`)
+	if err != nil {
+		return err
+	}
+
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS public.categories (
+			id SERIAL PRIMARY KEY,
+			isim TEXT NOT NULL UNIQUE
 		)
 	`)
 	return err
@@ -387,6 +479,9 @@ func main() {
 	http.HandleFunc("/admin/update", updateHandler)
 	http.HandleFunc("/admin/add", addProductHandler)
 	http.HandleFunc("/admin/delete", deleteProductHandler)
+	http.HandleFunc("/admin/categories/add", addCategoryHandler)
+	http.HandleFunc("/admin/categories/delete", deleteCategoryHandler)
+	http.HandleFunc("/admin/categories/edit", editCategoryHandler)
 	http.HandleFunc("/logout", logoutHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	fmt.Println("Stok takip sunucusu: http://localhost:8080")
