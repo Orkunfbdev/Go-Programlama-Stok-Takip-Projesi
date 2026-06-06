@@ -1,80 +1,89 @@
-# 📦 Go Stok Takip Projesi
+# Go Stok Takip Projesi
 
-Go ile yazılmış, PostgreSQL destekli web tabanlı stok yönetim sistemi.
+PostgreSQL destekli web tabanli stok takip ve siparis uygulamasi.
 
-## 🚀 Kurulum
+## Klasor Yapisi
 
-### 1. Gereksinimler
-- [Go](https://go.dev/dl/) (1.21+)
-- [PostgreSQL](https://www.postgresql.org/download/) (18)
-
-### 2. Projeyi İndir
-```bash
-git clone https://github.com/Orkunfbdev/Go-Programlama-Stok-Takip-Projesi.git
-cd Go-Programlama-Stok-Takip-Projesi
+```text
+.
+├── app/
+│   ├── main.go
+│   └── templates/
+│       ├── index.html
+│       ├── systems.html
+│       ├── cart.html
+│       ├── checkout.html
+│       ├── login.html
+│       ├── admin.html
+│       ├── musteri_giris.html
+│       ├── musteri_kayit.html
+│       └── profil.html
+├── database/
+│   ├── schema.sql
+│   └── stok_takip_backup.sql
+├── go.mod
+├── go.sum
+└── README.md
 ```
 
-### 3. Veritabanı Kurulumu
+## Gereksinimler
 
-Eğer `stok_takip` database'i yoksa oluştur:
+- Go 1.21 veya ustu
+- PostgreSQL 18
+
+## Veritabani Kurulumu
+
+Yeni bilgisayarda once veritabanini olustur:
+
 ```powershell
 & "C:\Program Files\PostgreSQL\18\bin\createdb.exe" -U postgres stok_takip
 ```
 
-> Eğer database zaten varsa bu adımı atla.
+Tum tablo ve verileri yuklemek icin:
 
-Backup'ı import et:
 ```powershell
-& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d stok_takip -f "stok_takip_backup.sql"
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d stok_takip -f "database\stok_takip_backup.sql"
 ```
 
-Veya pgAdmin kullanıyorsan:
-> `stok_takip` → Sağ tık → **Restore** → `stok_takip_backup.sql` dosyasını seç → Restore
+Sadece tablo yapisini kurmak istersen:
 
-### 4. Bağlantı Ayarı
-
-`main.go` dosyasının 63. satırındaki şifreyi kendi PostgreSQL şifrenle değiştir:
-```go
-connStr := "host=127.0.0.1 port=5432 user=postgres password=ŞİFREN dbname=stok_takip sslmode=disable"
-```
-
-### 5. Çalıştır
 ```powershell
-go run main.go
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d stok_takip -f "database\schema.sql"
 ```
 
-Tarayıcıda aç: **http://localhost:8080**
+## Baglanti Ayari
 
----
+PostgreSQL sifren farkliysa `app/main.go` icindeki `connStr` satirinda `password=5757` kismini kendi sifrenle degistir.
 
-## 🔑 Admin Paneli
+## Calistirma
 
-- URL: `http://localhost:8080/login`
-- Admin hesabı veritabanındaki `public.admin` tablosunda tutulur
+Repo kokunden:
 
----
-
-## 📁 Proje Yapısı
-
-```
-├── main.go                 # Ana Go dosyası
-├── go.mod / go.sum         # Bağımlılıklar
-├── stok_takip_backup.sql   # Veritabanı yedeği
-└── templates/
-    ├── index.html          # Ana sayfa
-    ├── systems.html        # Ürünler sayfası
-    ├── cart.html           # Sepet
-    ├── login.html          # Admin girişi
-    └── admin.html          # Admin paneli
+```powershell
+go run ./app
 ```
 
----
+Ya da uygulama klasorunden:
 
-## 🛠️ Özellikler
+```powershell
+cd app
+go run .
+```
 
-- ✅ Ürün listeleme ve arama
-- ✅ Sepet sistemi
-- ✅ Admin paneli (ürün ekle/düzenle/sil)
-- ✅ Kategori yönetimi (DB'den)
-- ✅ Stok takibi ve uyarıları
-- ✅ PostgreSQL entegrasyonu
+Tarayicida ac:
+
+```text
+http://localhost:8080
+```
+
+## Ozellikler
+
+- Urun listeleme
+- Sepet sistemi
+- Admin paneli
+- Kategori yonetimi
+- Musteri kayit ve giris
+- Adres kaydi
+- Checkout ve siparis olusturma
+- Siparis gecmisi
+- PostgreSQL tablo kurulumu ve SQL yedegi

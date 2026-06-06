@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sipariş Tamamla - TechShop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #131315; color: #e0e0f0; min-height: 100vh; display: flex; flex-direction: column; }
+        nav { background: rgba(19,19,21,0.95); border-bottom: 1px solid #2a3b3c; padding: 0 48px; display: flex; align-items: center; justify-content: space-between; height: 64px; position: sticky; top: 0; z-index: 50; }
+        .logo { font-size: 18px; font-weight: 800; color: #00dbe9; text-decoration: none; }
+        .nav-link { color: #7a9a9b; text-decoration: none; font-size: 13px; margin-left: 24px; }
+        .nav-link:hover { color: #e0e0f0; }
+        main { flex: 1; max-width: 1100px; margin: 0 auto; width: 100%; padding: 48px 24px; }
+        h1 { font-size: 32px; font-weight: 800; color: #e5e1e4; margin-bottom: 6px; }
+        .sub { color: #7a9a9b; font-size: 14px; margin-bottom: 36px; }
+        .grid { display: grid; grid-template-columns: 1fr 320px; gap: 28px; align-items: start; }
+        .section { background: #1c1c26; border: 1px solid #2a3b3c; border-radius: 14px; padding: 28px; margin-bottom: 20px; }
+        .section-title { font-size: 15px; font-weight: 700; color: #e5e1e4; margin-bottom: 20px; }
+        .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .fg { margin-bottom: 14px; }
+        label { display: block; font-size: 11px; font-weight: 600; color: #7a9a9b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        input[type="text"] { width: 100%; background: #0e0e10; border: 1px solid #2a3b3c; color: #e0e0f0; padding: 10px 13px; border-radius: 9px; font-size: 14px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; }
+        input:focus { border-color: #00dbe9; }
+        .addr-opt { background: #0e0e10; border: 1px solid #2a3b3c; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; transition: border-color 0.2s; }
+        .addr-opt.selected { border-color: #00dbe9; background: rgba(0,219,233,0.05); }
+        .addr-opt input[type="radio"] { margin-top: 2px; accent-color: #00dbe9; }
+        .addr-title { font-size: 13px; font-weight: 700; color: #e0e0f0; }
+        .addr-detail { font-size: 12px; color: #7a9a9b; margin-top: 3px; line-height: 1.5; }
+        .summary { background: #1c1c26; border: 1px solid #2a3b3c; border-radius: 14px; padding: 24px; position: sticky; top: 80px; }
+        .s-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1e2e2f; font-size: 13px; }
+        .s-name { color: #b9cacb; }
+        .s-price { color: #e5e1e4; font-weight: 600; }
+        .total-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0 20px; border-top: 1px solid #2a3b3c; margin-top: 8px; }
+        .total-label { font-size: 15px; font-weight: 700; color: #e5e1e4; }
+        .total-val { font-size: 26px; font-weight: 800; color: #00dbe9; }
+        .btn-buy { width: 100%; background: linear-gradient(135deg,#00dbe9,#0099aa); color: #002022; border: none; padding: 15px; border-radius: 9px; font-size: 14px; font-weight: 800; cursor: pointer; transition: all 0.3s; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 20px rgba(0,219,233,0.3); }
+        .btn-buy:hover { box-shadow: 0 0 28px rgba(0,219,233,0.6); transform: translateY(-2px); }
+        .error-msg { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.25); color: #f87171; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 20px; }
+        .user-bar { display: flex; align-items: center; justify-content: space-between; background: rgba(0,219,233,0.05); border: 1px solid rgba(0,219,233,0.2); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; }
+        .user-bar span { font-size: 13px; color: #7a9a9b; }
+        .user-bar strong { color: #00dbe9; }
+        .user-bar a { color: #7a9a9b; font-size: 12px; text-decoration: none; }
+        .tab-row { display: flex; gap: 8px; margin-bottom: 18px; }
+        .tab-btn { flex: 1; padding: 9px; border-radius: 8px; border: 1px solid #2a3b3c; background: #0e0e10; color: #7a9a9b; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+        .tab-btn.on { border-color: #00dbe9; color: #00dbe9; background: rgba(0,219,233,0.06); }
+        .tab-pane { display: none; }
+        .tab-pane.on { display: block; }
+        footer { background: #0e0e10; border-top: 1px solid #1e2e2f; padding: 20px 48px; font-size: 12px; color: #4a6a6b; text-align: center; }
+    </style>
+</head>
+<body>
+<nav>
+    <a class="logo" href="/">TechShop</a>
+    <div>
+        <a class="nav-link" href="/">Ana Sayfa</a>
+        <a class="nav-link" href="/systems">Ürünler</a>
+        <a class="nav-link" href="/cart">← Sepet</a>
+    </div>
+</nav>
+<main>
+    <h1>Siparişi Tamamla</h1>
+    <p class="sub">Teslimat adresini seç ve siparişini onayla.</p>
+    {{if .Error}}<div class="error-msg">⚠️ {{.Error}}</div>{{end}}
+    <div class="grid">
+        <div>
+            <div class="user-bar">
+                <div><span>Giriş: </span><strong>{{.Musteri.Ad}} {{.Musteri.Soyad}}</strong> <span style="margin-left:6px;color:#4a6a6b">{{.Musteri.Email}}</span></div>
+                <a href="/musteri/cikis">Çıkış</a>
+            </div>
+            <div class="section">
+                <div class="section-title">📦 Teslimat Adresi</div>
+                <form method="POST" action="/checkout">
+                {{if .Adresler}}
+                <div class="tab-row">
+                    <button type="button" class="tab-btn on" onclick="switchTab('saved',this)">Kayıtlı Adreslerim</button>
+                    <button type="button" class="tab-btn" onclick="switchTab('new',this)">Yeni Adres</button>
+                </div>
+                <div id="tab-saved" class="tab-pane on">
+                    {{range .Adresler}}
+                    <label class="addr-opt">
+                        <input type="radio" name="adres_id" value="{{.ID}}" {{if .Varsayilan}}checked{{end}} onchange="document.querySelectorAll('.addr-opt').forEach(function(e){e.classList.remove('selected')});this.closest('.addr-opt').classList.add('selected')">
+                        <div>
+                            <div class="addr-title">{{.Baslik}}</div>
+                            <div class="addr-detail">{{.Mahalle}}, {{.AdresSatir}}<br>{{.Ilce}} / {{.Il}}</div>
+                        </div>
+                    </label>
+                    {{end}}
+                    <div style="margin-top:10px">
+                        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#7a9a9b;cursor:pointer">
+                            <input type="radio" name="adres_id" value="new" onchange="switchTab('new',null)"> + Yeni adres ekle
+                        </label>
+                    </div>
+                </div>
+                <div id="tab-new" class="tab-pane">
+                {{else}}
+                <input type="hidden" name="adres_id" value="new">
+                <div id="tab-new" class="tab-pane on">
+                {{end}}
+                    <div class="row2">
+                        <div class="fg"><label>Adres Başlığı</label><input type="text" name="baslik" placeholder="Ev"></div>
+                        <div class="fg"><label>Posta Kodu</label><input type="text" name="posta_kodu" placeholder="34000"></div>
+                    </div>
+                    <div class="row2">
+                        <div class="fg"><label>İl</label><input type="text" name="il" placeholder="İstanbul"></div>
+                        <div class="fg"><label>İlçe</label><input type="text" name="ilce" placeholder="Kadıköy"></div>
+                    </div>
+                    <div class="fg"><label>Mahalle / Semt</label><input type="text" name="mahalle" placeholder="Moda Mah."></div>
+                    <div class="fg"><label>Açık Adres</label><input type="text" name="adres_satir" placeholder="Sok. No: Daire:"></div>
+                    <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#7a9a9b;cursor:pointer">
+                        <input type="checkbox" name="varsayilan" value="1" style="accent-color:#00dbe9"> Varsayılan adres olarak kaydet
+                    </label>
+                </div>
+                <div style="margin-top:24px">
+                    <button type="submit" class="btn-buy">✅ Siparişi Onayla ve Satın Al</button>
+                </div>
+                </form>
+            </div>
+        </div>
+        <div class="summary">
+            <div class="section-title">📋 Sipariş Özeti</div>
+            {{range .Items}}
+            <div class="s-item">
+                <span class="s-name">{{.Product.Name}} ({{.Qty}}x)</span>
+                <span class="s-price">{{printf "%.0f" .Subtotal}} TL</span>
+            </div>
+            {{end}}
+            <div class="total-row">
+                <span class="total-label">Toplam</span>
+                <span class="total-val">{{printf "%.0f" .Total}} TL</span>
+            </div>
+        </div>
+    </div>
+</main>
+<footer>TechShop © 2025 — Güvenli Alışveriş</footer>
+<script>
+function switchTab(name, btn) {
+    document.querySelectorAll('.tab-pane').forEach(function(p){ p.classList.remove('on'); });
+    var p = document.getElementById('tab-' + name);
+    if(p) p.classList.add('on');
+    if(btn) {
+        document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('on'); });
+        btn.classList.add('on');
+    }
+}
+document.querySelectorAll('.addr-opt').forEach(function(el){
+    var r = el.querySelector('input[type="radio"]');
+    if(r && r.checked) el.classList.add('selected');
+    el.addEventListener('click', function(){
+        document.querySelectorAll('.addr-opt').forEach(function(e){ e.classList.remove('selected'); });
+        el.classList.add('selected');
+    });
+});
+</script>
+</body>
+</html>

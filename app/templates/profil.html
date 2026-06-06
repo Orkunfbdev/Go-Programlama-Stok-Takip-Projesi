@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profilim - TechShop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #131315; color: #e0e0f0; min-height: 100vh; display: flex; flex-direction: column; }
+        nav { background: rgba(19,19,21,0.95); border-bottom: 1px solid #2a3b3c; padding: 0 48px; display: flex; align-items: center; justify-content: space-between; height: 64px; position: sticky; top: 0; z-index: 50; }
+        .logo { font-size: 18px; font-weight: 800; color: #00dbe9; text-decoration: none; }
+        .nav-link { color: #7a9a9b; text-decoration: none; font-size: 13px; margin-left: 24px; transition: color 0.2s; }
+        .nav-link:hover { color: #e0e0f0; }
+        .nav-link.active { color: #00dbe9; }
+        main { flex: 1; max-width: 900px; margin: 0 auto; width: 100%; padding: 48px 24px; }
+        h1 { font-size: 28px; font-weight: 800; color: #e5e1e4; margin-bottom: 4px; }
+        .sub { color: #7a9a9b; font-size: 14px; margin-bottom: 32px; }
+        .card { background: #1c1c26; border: 1px solid #2a3b3c; border-radius: 14px; padding: 24px; margin-bottom: 20px; }
+        .card-title { font-size: 15px; font-weight: 700; color: #e5e1e4; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+        .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1e2e2f; font-size: 14px; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: #7a9a9b; }
+        .info-val { color: #e5e1e4; font-weight: 500; }
+        /* Siparişler */
+        .order-item { background: #0e0e10; border: 1px solid #2a3b3c; border-radius: 10px; padding: 16px 18px; margin-bottom: 12px; }
+        .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .order-id { font-size: 13px; font-weight: 700; color: #00dbe9; }
+        .order-date { font-size: 12px; color: #4a6a6b; }
+        .order-status { font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; }
+        .status-tamamlandi { background: rgba(0,212,170,0.1); color: #00d4aa; border: 1px solid rgba(0,212,170,0.3); }
+        .status-beklemede { background: rgba(255,193,7,0.1); color: #ffc107; border: 1px solid rgba(255,193,7,0.3); }
+        .status-iptal { background: rgba(248,113,113,0.1); color: #f87171; border: 1px solid rgba(248,113,113,0.3); }
+        .order-urunler { font-size: 13px; color: #7a9a9b; margin-bottom: 8px; }
+        .order-total { font-size: 15px; font-weight: 800; color: #e5e1e4; text-align: right; }
+        .order-addr { font-size: 12px; color: #4a6a6b; margin-top: 6px; }
+        .empty { text-align: center; padding: 40px; color: #4a6a6b; font-size: 14px; }
+        .btn-logout { display: inline-block; margin-top: 8px; padding: 9px 20px; border: 1px solid rgba(248,113,113,0.3); color: #f87171; border-radius: 8px; font-size: 13px; text-decoration: none; transition: all 0.2s; }
+        .btn-logout:hover { background: rgba(248,113,113,0.08); }
+        .btn-shop { display: inline-block; margin-top: 16px; padding: 11px 28px; background: #00dbe9; color: #002022; border-radius: 8px; font-size: 13px; font-weight: 800; text-decoration: none; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s; }
+        .btn-shop:hover { background: #00bfcc; transform: translateY(-1px); }
+        footer { background: #0e0e10; border-top: 1px solid #1e2e2f; padding: 20px 48px; font-size: 12px; color: #4a6a6b; text-align: center; }
+    </style>
+</head>
+<body>
+<nav>
+    <a class="logo" href="/">TechShop</a>
+    <div>
+        <a class="nav-link" href="/">Ana Sayfa</a>
+        <a class="nav-link" href="/systems">Ürünler</a>
+        <a class="nav-link" href="/cart">Sepet</a>
+        <a class="nav-link active" href="/musteri/profil">Profilim</a>
+    </div>
+</nav>
+<main>
+    <h1>👤 Profilim</h1>
+    <p class="sub">Hesap bilgilerin ve sipariş geçmişin</p>
+
+    <!-- Hesap Bilgileri -->
+    <div class="card">
+        <div class="card-title">🧑 Hesap Bilgileri</div>
+        <div class="info-row"><span class="info-label">Ad Soyad</span><span class="info-val">{{.Musteri.Ad}} {{.Musteri.Soyad}}</span></div>
+        <div class="info-row"><span class="info-label">E-posta</span><span class="info-val">{{.Musteri.Email}}</span></div>
+        <div class="info-row"><span class="info-label">Telefon</span><span class="info-val">{{if .Musteri.Tel}}{{.Musteri.Tel}}{{else}}—{{end}}</span></div>
+        <div style="margin-top:16px">
+            <a href="/musteri/cikis" class="btn-logout">Çıkış Yap</a>
+        </div>
+    </div>
+
+    <!-- Sipariş Geçmişi -->
+    <div class="card">
+        <div class="card-title">📦 Sipariş Geçmişi</div>
+        {{if .Siparisler}}
+            {{range .Siparisler}}
+            <div class="order-item">
+                <div class="order-header">
+                    <span class="order-id">#{{.ID}} — Sipariş</span>
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <span class="order-date">{{.Tarih}}</span>
+                        <span class="order-status status-{{.Durum}}">{{.Durum}}</span>
+                    </div>
+                </div>
+                <div class="order-urunler">{{.UrunOzeti}}</div>
+                {{if .AdresBilgi}}<div class="order-addr">📍 {{.AdresBilgi}}</div>{{end}}
+                <div class="order-total">{{printf "%.0f" .Toplam}} TL</div>
+            </div>
+            {{end}}
+        {{else}}
+            <div class="empty">Henüz sipariş vermediniz.<br><a class="btn-shop" href="/systems">Alışverişe Başla →</a></div>
+        {{end}}
+    </div>
+</main>
+<footer>TechShop © 2025</footer>
+</body>
+</html>
