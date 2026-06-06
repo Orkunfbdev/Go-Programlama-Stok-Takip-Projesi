@@ -160,18 +160,4 @@ function addSlideNumber(slide, n) {
   addSlideNumber(slide, 2);
 }
 
-// Slide 3
-{
-  const slide = pptx.addSlide();
-  slide.background = { color: C.bg };
-  slide.addImage({ path: path.join(assets, "code-products-db.png"), x: 0, y: 0, w: 13.333, h: 7.5 });
-}
-
-// Slide 4
-{
-  const slide = pptx.addSlide();
-  slide.background = { color: C.bg };
-  slide.addImage({ path: path.join(assets, "code-checkout-routes.png"), x: 0, y: 0, w: 13.333, h: 7.5 });
-}
-
 pptx.writeFile({ fileName: outPath });
