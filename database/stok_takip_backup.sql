@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 5wmFbOkjelWyB6El8LcU1ZlwRhvMf8JZVE5SOQNBV3Qzup6RLfUo3AhElqc0YY1
+\restrict v2x1xL2vVom64hVKRWSfYZzZIMMwTyDQ6OCmTreJNyP5We3QoRDErdxas9x2RQd
 
 -- Dumped from database version 18.1
 -- Dumped by pg_dump version 18.1
@@ -352,6 +352,9 @@ COPY public.musteriler (id, ad, soyad, email, sifre, tel, olusturulma) FROM stdi
 COPY public.products (id, isim, fiyat, stok, kategori, resim, "tanım") FROM stdin;
 2	rtx 2090	2500	2	Bilgisayar	https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcQV1ehdC2ZRpZ9D3I89rtgZdjBbME7VDS4SfDIlxw7frwaqKX8z2oPGOMjSVvJv6_G7NQxF-dfzoA6J6H60ddttBYR_v-Bojg	oyun canavarı
 1	rtx 5090	55000	10	Telefon	https://static.sinerji.gen.tr/Images/MD/L9Q-39f4b516a0a7e5344fe9a30b8cb9721a.jpg	oyun canavarı
+3	iPhone 15 Pro	64999	12	Telefon	https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=900&auto=format&fit=crop	A17 Pro işlemcili premium akıllı telefon
+4	Gaming Masaüstü Bilgisayar	42999	6	Bilgisayar	https://images.unsplash.com/photo-1587831990711-23ca6441447b?q=80&w=900&auto=format&fit=crop	RTX ekran kartlı yüksek performanslı masaüstü sistem
+5	Lenovo IdeaPad Laptop	24999	9	Bilgisayar	https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=900&auto=format&fit=crop	Günlük kullanım ve okul projeleri için taşınabilir laptop
 \.
 
 
@@ -407,7 +410,7 @@ SELECT pg_catalog.setval('public.musteriler_id_seq', 1, true);
 -- Name: products _id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public."products _id_seq"', 2, true);
+SELECT pg_catalog.setval('public."products _id_seq"', 5, true);
 
 
 --
@@ -532,5 +535,5 @@ ALTER TABLE ONLY public.siparisler
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 5wmFbOkjelWyB6El8LcU1ZlwRhvMf8JZVE5SOQNBV3Qzup6RLfUo3AhElqc0YY1
+\unrestrict v2x1xL2vVom64hVKRWSfYZzZIMMwTyDQ6OCmTreJNyP5We3QoRDErdxas9x2RQd
 
