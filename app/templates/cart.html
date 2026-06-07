@@ -62,6 +62,11 @@
   .btn-buy .icon{font-family:'Material Symbols Outlined';font-size:18px}
   .btn-continue{display:block;text-align:center;margin-top:12px;color:#7a9a9b;text-decoration:none;font-size:13px;font-family:'JetBrains Mono',monospace;transition:color 0.2s}
   .btn-continue:hover{color:#00dbe9}
+  .toast{position:fixed;right:28px;top:86px;z-index:1000;min-width:260px;max-width:360px;padding:14px 16px;border-radius:10px;display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;box-shadow:0 14px 40px rgba(0,0,0,0.35);animation:toast-in .25s ease-out}
+  .toast .icon{font-family:'Material Symbols Outlined';font-size:20px}
+  .toast-success{background:rgba(0,219,233,0.14);border:1px solid rgba(0,219,233,0.45);color:#7df4ff}
+  .toast-danger{background:rgba(248,113,113,0.14);border:1px solid rgba(248,113,113,0.45);color:#ffb4ab}
+  @keyframes toast-in{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
   footer{background:#0e0e10;border-top:1px solid #1e2e2f;padding:24px 48px;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-family:'JetBrains Mono',monospace;color:#4a6a6b}
 </style>
 </head>
@@ -79,6 +84,17 @@
 <main>
   <h1>Sepetim</h1>
   <p class="sub">Seçtiğin ürünleri kontrol et ve satın al.</p>
+
+  {{if .Notice}}
+  <div id="cart-toast" class="toast {{if eq .Notice "stock"}}toast-danger{{else}}toast-success{{end}}">
+    <span class="icon">{{if eq .Notice "stock"}}error{{else if eq .Notice "removed"}}delete{{else}}check_circle{{end}}</span>
+    <span>
+      {{if eq .Notice "added"}}Sepete eklendi.{{end}}
+      {{if eq .Notice "removed"}}Sepetten kaldırıldı.{{end}}
+      {{if eq .Notice "stock"}}Stokta kalmadı.{{end}}
+    </span>
+  </div>
+  {{end}}
 
   {{if .Success}}
   <div class="alert alert-success">
@@ -159,6 +175,13 @@
 
 <script>
 (function(){
+  var toast = document.getElementById('cart-toast');
+  if(toast){
+    setTimeout(function(){ toast.style.display = 'none'; }, 2800);
+    if(window.history && window.history.replaceState){
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }
   var c = document.cookie.split(';').find(function(x){return x.trim().startsWith('cart=')});
   if(!c) return;
   var val = c.split('=')[1]; if(!val) return;

@@ -75,6 +75,53 @@
       background: #3b494b;
       border-radius: 4px;
     }
+
+    .toast {
+      position: fixed;
+      right: 28px;
+      top: 86px;
+      z-index: 1000;
+      min-width: 260px;
+      max-width: 360px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+      animation: toast-in .25s ease-out;
+    }
+
+    .toast .material-symbols-outlined {
+      font-size: 20px;
+    }
+
+    .toast-success {
+      background: rgba(0, 219, 233, 0.14);
+      border: 1px solid rgba(0, 219, 233, 0.45);
+      color: #7df4ff;
+    }
+
+    .toast-danger {
+      background: rgba(248, 113, 113, 0.14);
+      border: 1px solid rgba(248, 113, 113, 0.45);
+      color: #ffb4ab;
+    }
+
+    @keyframes toast-in {
+      from {
+        opacity: 0;
+        transform: translateX(16px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
   </style>
 </head>
 
@@ -112,43 +159,23 @@
     <aside class="w-full lg:w-64 flex-shrink-0 flex flex-col gap-6">
       <div class="flex items-center justify-between pb-4 border-b border-outline-variant/30">
         <h2 class="font-headline-md font-bold text-on-surface">Filtreler</h2>
-        <button
+        <button type="button" id="resetFilters"
           class="text-label-sm font-label-sm text-primary-fixed-dim hover:text-primary transition-colors underline underline-offset-4">Temizle</button>
       </div>
       <!-- Kategori -->
       <div class="flex flex-col gap-3">
         <h3 class="text-label-md font-label-md text-on-surface-variant">Kategori</h3>
         <div class="flex flex-col gap-2 filter-scroll max-h-48 overflow-y-auto pr-2">
+          {{range .Categories}}
           <label class="flex items-center gap-3 cursor-pointer group">
             <input
               class="form-checkbox bg-surface-container-lowest border-outline-variant rounded-sm text-primary-fixed-dim"
-              type="checkbox" />
-            <span class="text-body-md text-on-surface group-hover:text-primary transition-colors">Bilgisayar</span>
+              type="checkbox" data-category-filter value="{{.Name}}" {{if eq $.AktifKategori .Name }}checked{{end}} />
+            <span class="text-body-md text-on-surface group-hover:text-primary transition-colors">{{.Name}}</span>
           </label>
-          <label class="flex items-center gap-3 cursor-pointer group">
-            <input
-              class="form-checkbox bg-surface-container-lowest border-outline-variant rounded-sm text-primary-fixed-dim"
-              type="checkbox" />
-            <span class="text-body-md text-on-surface group-hover:text-primary transition-colors">Telefon</span>
-          </label>
-          <label class="flex items-center gap-3 cursor-pointer group">
-            <input
-              class="form-checkbox bg-surface-container-lowest border-outline-variant rounded-sm text-primary-fixed-dim"
-              type="checkbox" />
-            <span class="text-body-md text-on-surface group-hover:text-primary transition-colors">Tablet</span>
-          </label>
-          <label class="flex items-center gap-3 cursor-pointer group">
-            <input
-              class="form-checkbox bg-surface-container-lowest border-outline-variant rounded-sm text-primary-fixed-dim"
-              type="checkbox" />
-            <span class="text-body-md text-on-surface group-hover:text-primary transition-colors">Monitör</span>
-          </label>
-          <label class="flex items-center gap-3 cursor-pointer group">
-            <input
-              class="form-checkbox bg-surface-container-lowest border-outline-variant rounded-sm text-primary-fixed-dim"
-              type="checkbox" />
-            <span class="text-body-md text-on-surface group-hover:text-primary transition-colors">Aksesuar</span>
-          </label>
+          {{else}}
+          <p class="text-body-md text-on-surface-variant">Henüz kategori yok.</p>
+          {{end}}
         </div>
       </div>
       <!-- Stok Durumu -->
@@ -156,13 +183,13 @@
         <h3 class="text-label-md font-label-md text-on-surface-variant">Stok Durumu</h3>
         <div class="flex flex-wrap gap-2">
           <label class="cursor-pointer">
-            <input checked class="peer sr-only" name="stock" type="radio" />
+            <input checked class="peer sr-only" name="stock" type="radio" data-stock-filter value="all" />
             <div
               class="px-3 py-1.5 border border-outline-variant/50 rounded text-label-sm font-label-sm text-on-surface-variant peer-checked:bg-primary-fixed-dim/10 peer-checked:border-primary-fixed-dim peer-checked:text-primary hover:border-primary-fixed-dim/50 transition-colors">
               Tümü</div>
           </label>
           <label class="cursor-pointer">
-            <input class="peer sr-only" name="stock" type="radio" />
+            <input class="peer sr-only" name="stock" type="radio" data-stock-filter value="available" />
             <div
               class="px-3 py-1.5 border border-outline-variant/50 rounded text-label-sm font-label-sm text-on-surface-variant peer-checked:bg-primary-fixed-dim/10 peer-checked:border-primary-fixed-dim peer-checked:text-primary hover:border-primary-fixed-dim/50 transition-colors">
               Stokta</div>
@@ -176,18 +203,18 @@
           <div class="relative w-full">
             <input
               class="w-full bg-surface-container-lowest border-0 border-b border-outline-variant text-body-md text-on-surface focus:ring-0 focus:border-primary-fixed-dim pb-1 px-1"
-              placeholder="Min" type="number" />
+              placeholder="Min" type="number" id="minPrice" />
             <span class="absolute right-1 top-1/2 -translate-y-1/2 text-on-surface-variant text-label-sm">TL</span>
           </div>
           <span class="text-outline-variant">-</span>
           <div class="relative w-full">
             <input
               class="w-full bg-surface-container-lowest border-0 border-b border-outline-variant text-body-md text-on-surface focus:ring-0 focus:border-primary-fixed-dim pb-1 px-1"
-              placeholder="Max" type="number" />
+              placeholder="Max" type="number" id="maxPrice" />
             <span class="absolute right-1 top-1/2 -translate-y-1/2 text-on-surface-variant text-label-sm">TL</span>
           </div>
         </div>
-        <button
+        <button type="button" id="applyFilters"
           class="mt-2 w-full bg-surface-container border border-primary-fixed-dim/30 text-primary-fixed-dim py-2 rounded text-label-md font-label-md hover:bg-primary-fixed-dim/10 transition-colors">Uygula</button>
       </div>
     </aside>
@@ -198,7 +225,7 @@
       <div
         class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface-container-lowest p-4 rounded-lg border border-outline-variant/20">
         <div class="text-body-md text-on-surface-variant">
-          <span class="text-on-surface font-bold">{{len .}}</span> ürün bulundu.
+          <span class="text-on-surface font-bold" id="visibleCount">{{len .Products}}</span> ürün bulundu.
         </div>
         <div class="flex items-center gap-3">
           <span class="text-label-sm font-label-sm text-on-surface-variant hidden sm:inline-block">Sırala:</span>
@@ -213,16 +240,17 @@
 
       <!-- Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {{range .}}
+        {{range .Products}}
         <article
-          class="glass-panel rounded-xl p-5 flex flex-col gap-4 glow-border transition-all duration-300 relative group cursor-pointer">
+          class="glass-panel rounded-xl p-5 flex flex-col gap-4 glow-border transition-all duration-300 relative group cursor-pointer"
+          data-product-card data-category="{{.Category}}" data-stock="{{.Stock}}" data-price="{{printf "%.0f" .Price}}">
           <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
             {{if gt .Stock 0}}
             <span
               class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-1 rounded tracking-widest uppercase">{{.Category}}</span>
             {{else}}
             <span
-              class="bg-error-container text-error text-[10px] font-bold px-2 py-1 rounded tracking-widest uppercase">Tükendi</span>
+              class="bg-error-container text-error text-[10px] font-bold px-2 py-1 rounded tracking-widest uppercase">Stokta kalmadı</span>
             {{end}}
           </div>
           <div
@@ -247,11 +275,12 @@
               {{else if gt .Stock 0}}
               <span class="text-[11px] text-yellow-400 mt-1">⚠️ Son {{.Stock}} adet</span>
               {{else}}
-              <span class="text-[11px] text-red-400 mt-1">❌ Tükendi</span>
+              <span class="text-[11px] text-red-400 mt-1">❌ Stokta kalmadı</span>
               {{end}}
             </div>
             <form method="POST" action="/cart/add">
               <input type="hidden" name="id" value="{{.ID}}">
+              <input type="hidden" name="redirect" value="/cart">
               {{if gt .Stock 0}}
               <button type="submit"
                 class="bg-primary-fixed-dim text-on-primary-fixed p-2 rounded-lg hover:shadow-[0_0_15px_rgba(0,219,233,0.6)] transition-all">
@@ -267,6 +296,10 @@
           </div>
         </article>
         {{end}}
+      </div>
+      <div id="emptyProducts"
+        class="hidden text-center border border-outline-variant/30 rounded-xl p-10 text-on-surface-variant bg-surface-container-lowest">
+        Bu filtrelere uygun ürün bulunamadı.
       </div>
     </div>
   </main>
@@ -287,6 +320,86 @@
       <div class="text-body-md font-body-md text-primary-fixed-dim text-sm">© 2025 TechShop.</div>
     </div>
   </footer>
+  <script>
+    (function () {
+      var cards = Array.prototype.slice.call(document.querySelectorAll('[data-product-card]'));
+      var categoryInputs = Array.prototype.slice.call(document.querySelectorAll('[data-category-filter]'));
+      var stockInputs = Array.prototype.slice.call(document.querySelectorAll('[data-stock-filter]'));
+      var minPrice = document.getElementById('minPrice');
+      var maxPrice = document.getElementById('maxPrice');
+      var applyButton = document.getElementById('applyFilters');
+      var resetButton = document.getElementById('resetFilters');
+      var countEl = document.getElementById('visibleCount');
+      var emptyEl = document.getElementById('emptyProducts');
+
+      function showToast(type, message) {
+        var toast = document.createElement('div');
+        toast.className = 'toast ' + (type === 'danger' ? 'toast-danger' : 'toast-success');
+        toast.innerHTML = '<span class="material-symbols-outlined">' + (type === 'danger' ? 'error' : 'check_circle') + '</span><span>' + message + '</span>';
+        document.body.appendChild(toast);
+        setTimeout(function () { toast.remove(); }, 2800);
+      }
+
+      var notice = new URLSearchParams(window.location.search).get('notice');
+      if (notice) {
+        if (notice === 'added') showToast('success', 'Sepete eklendi.');
+        if (notice === 'removed') showToast('success', 'Sepetten kaldırıldı.');
+        if (notice === 'stock') showToast('danger', 'Stokta kalmadı.');
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+
+      function applyFilters() {
+        var categories = categoryInputs
+          .filter(function (input) { return input.checked; })
+          .map(function (input) { return input.value; });
+        var selectedStock = stockInputs.find(function (input) { return input.checked; });
+        var stockMode = selectedStock ? selectedStock.value : 'all';
+        var min = minPrice && minPrice.value ? Number(minPrice.value) : null;
+        var max = maxPrice && maxPrice.value ? Number(maxPrice.value) : null;
+        var visible = 0;
+
+        cards.forEach(function (card) {
+          var category = card.getAttribute('data-category');
+          var stock = Number(card.getAttribute('data-stock') || 0);
+          var price = Number(card.getAttribute('data-price') || 0);
+          var show =
+            (categories.length === 0 || categories.indexOf(category) !== -1) &&
+            (stockMode === 'all' || stock > 0) &&
+            (min === null || price >= min) &&
+            (max === null || price <= max);
+
+          card.style.display = show ? '' : 'none';
+          if (show) visible++;
+        });
+
+        if (countEl) countEl.textContent = String(visible);
+        if (emptyEl) emptyEl.classList.toggle('hidden', visible !== 0);
+      }
+
+      categoryInputs.forEach(function (input) { input.addEventListener('change', applyFilters); });
+      stockInputs.forEach(function (input) { input.addEventListener('change', applyFilters); });
+      if (applyButton) applyButton.addEventListener('click', applyFilters);
+      if (resetButton) {
+        resetButton.addEventListener('click', function () {
+          categoryInputs.forEach(function (input) { input.checked = false; });
+          stockInputs.forEach(function (input) { input.checked = input.value === 'all'; });
+          if (minPrice) minPrice.value = '';
+          if (maxPrice) maxPrice.value = '';
+          applyFilters();
+        });
+      }
+      [minPrice, maxPrice].forEach(function (input) {
+        if (!input) return;
+        input.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter') applyFilters();
+        });
+      });
+
+      applyFilters();
+    })();
+  </script>
 </body>
 
 </html>

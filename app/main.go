@@ -25,6 +25,9 @@ type Product struct {
 	Image    string
 	Desc     string
 }
+
+// Sayfalara tek tek değişken göndermek yerine bu struct'lar kullanılıyor.
+// Böylece template tarafı hangi veriyi göstereceğini düzenli bir şekilde alıyor.
 type Category struct {
 	ID   int
 	Name string
@@ -39,6 +42,7 @@ type CartPageData struct {
 	Total   float64
 	Success bool
 	Error   string
+	Notice  string
 }
 type HomeData struct {
 	Featured     []Product
@@ -121,11 +125,13 @@ type MusteriKayitPageData struct {
 }
 
 func hashSifre(sifre string) string {
+	// Şifre veritabanında düz metin durmasın diye sabit bir salt ile hashleniyor.
 	h := sha256.Sum256([]byte("techshop_salt_" + sifre))
 	return hex.EncodeToString(h[:])
 }
 
 func getMusteriSession(r *http.Request) (Musteri, bool) {
+	// Müşteri girişi cookie üstünden takip ediliyor; cookie yoksa kullanıcı girişsiz kabul edilir.
 	c, err := r.Cookie("musteri_id")
 	if err != nil || c.Value == "" {
 		return Musteri{}, false
@@ -183,6 +189,8 @@ func isAdmin(r *http.Request) bool {
 }
 
 func getCart(r *http.Request) map[int]int {
+	// Sepet verisi küçük olduğu için cookie içinde "urunID:adet" formatında tutuluyor.
+	// Bu sayede müşteri giriş yapmadan da ürünleri sepete ekleyebiliyor.
 	cart := make(map[int]int)
 	c, err := r.Cookie("cart")
 	if err != nil || c.Value == "" {
@@ -202,6 +210,8 @@ func getCart(r *http.Request) map[int]int {
 }
 
 func saveCart(w http.ResponseWriter, cart map[int]int) {
+	// Map tekrar cookie formatına çevrilir; adet 0 ise sepete yazılmaz.
+	// Böylece kaldırılan ürünler cookie içinde gereksiz yer kaplamaz.
 	var parts []string
 	for id, qty := range cart {
 		if qty > 0 {
@@ -212,6 +222,8 @@ func saveCart(w http.ResponseWriter, cart map[int]int) {
 }
 
 func getProducts() ([]Product, error) {
+	// Ürün listeleme, ana sayfa, sepet ve admin panel aynı Product modelini kullanıyor.
+	// COALESCE boş resim/açıklama alanlarında Go tarafında hata oluşmasını engeller.
 	rows, err := db.Query(`SELECT id, isim, fiyat, stok, kategori, COALESCE(resim, ''), COALESCE("tanım", '') FROM public.products ORDER BY id ASC`)
 	if err != nil {
 		return nil, err
@@ -230,6 +242,7 @@ func getProducts() ([]Product, error) {
 }
 
 func getCategories() ([]Category, error) {
+	// Kategoriler veritabanından okunur; admin panelden eklenen kategori listeleme filtresine de yansır.
 	rows, err := db.Query(`SELECT id, isim FROM public.categories ORDER BY isim ASC`)
 	if err != nil {
 		return nil, err
@@ -247,6 +260,7 @@ func getCategories() ([]Category, error) {
 }
 
 func getCartItems(r *http.Request) ([]CartItem, float64) {
+	// Cookie içinde sadece id/adet var; ürün adı, fiyat ve stok güncel kalsın diye DB'den gelen ürünlerle eşleştiriliyor.
 	var items []CartItem
 	var total float64
 	list, err := getProducts()
@@ -267,6 +281,8 @@ func getCartItems(r *http.Request) ([]CartItem, float64) {
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
+	// Ana sayfada tüm ürünleri değil, ilk birkaç ürünü vitrin gibi gösteriyoruz.
+	// Böylece kullanıcı uygulamayı açınca hızlı bir mağaza özeti görüyor.
 	list, err := getProducts()
 	if err != nil {
 		http.Error(w, "Veritabanı hatası: "+err.Error(), http.StatusInternalServerError)
@@ -286,6 +302,8 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func systemsHandler(w http.ResponseWriter, r *http.Request) {
+	// Listeleme sayfasına ürünler ve kategoriler birlikte gönderilir.
+	// Filtreleme JavaScript tarafında yapıldığı için sayfa yenilenmeden kategori/stok/fiyat süzmesi çalışır.
 	list, err := getProducts()
 	if err != nil {
 		http.Error(w, "Veritabanı hatası: "+err.Error(), http.StatusInternalServerError)
@@ -293,21 +311,19 @@ func systemsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	cats, _ := getCategories()
 	aktif := r.URL.Query().Get("kategori")
-	if aktif != "" {
-		var filtered []Product
-		for _, p := range list {
-			if p.Category == aktif {
-				filtered = append(filtered, p)
-			}
-		}
-		list = filtered
-	}
 	tmpl.ExecuteTemplate(w, "systems.html", SystemsData{Products: list, Categories: cats, AktifKategori: aktif})
 }
 
 func cartHandler(w http.ResponseWriter, r *http.Request) {
+	// Sepet sayfası hem ürünleri hem de ekleme/kaldırma gibi kısa bildirimleri gösterir.
 	items, total := getCartItems(r)
-	tmpl.ExecuteTemplate(w, "cart.html", CartPageData{items, total, r.URL.Query().Get("success") == "1", r.URL.Query().Get("error")})
+	tmpl.ExecuteTemplate(w, "cart.html", CartPageData{
+		Items:   items,
+		Total:   total,
+		Success: r.URL.Query().Get("success") == "1",
+		Error:   r.URL.Query().Get("error"),
+		Notice:  r.URL.Query().Get("notice"),
+	})
 }
 
 func addToCartHandler(w http.ResponseWriter, r *http.Request) {
@@ -316,25 +332,45 @@ func addToCartHandler(w http.ResponseWriter, r *http.Request) {
 
 	var stock int
 	err := db.QueryRow("SELECT stok FROM public.products WHERE id = $1", id).Scan(&stock)
-	if err == nil && stock > 0 {
-		if cart[id] < stock {
-			cart[id]++
-		}
+	// Ürün stokta yoksa veya sepetteki adet stoku doldurduysa cookie değiştirilmez.
+	// Bu kontrol frontend kapalı olsa bile stok dışı ürünün sepete eklenmesini engeller.
+	notice := "stock"
+	if err == nil && stock > 0 && cart[id] < stock {
+		cart[id]++
+		notice = "added"
 	}
 	saveCart(w, cart)
+	redirect := r.FormValue("redirect")
+	// Redirect sadece site içi path ise kabul edilir; böylece dış siteye yönlendirme açığı oluşmaz.
+	if strings.HasPrefix(redirect, "/") && !strings.HasPrefix(redirect, "//") {
+		http.Redirect(w, r, withNotice(redirect, notice), http.StatusFound)
+		return
+	}
 	ref := r.Header.Get("Referer")
 	if ref == "" {
 		ref = "/systems"
 	}
-	http.Redirect(w, r, ref, http.StatusFound)
+	http.Redirect(w, r, withNotice(ref, notice), http.StatusFound)
 }
 
 func removeFromCartHandler(w http.ResponseWriter, r *http.Request) {
+	// Ürün kaldırılırken map'ten silmek yeterli; saveCart yeni cookie'yi boş ürünsüz yazar.
 	id, _ := strconv.Atoi(r.FormValue("id"))
 	cart := getCart(r)
 	delete(cart, id)
 	saveCart(w, cart)
-	http.Redirect(w, r, "/cart", http.StatusFound)
+	http.Redirect(w, r, "/cart?notice=removed", http.StatusFound)
+}
+
+func withNotice(target, notice string) string {
+	if notice == "" {
+		return target
+	}
+	separator := "?"
+	if strings.Contains(target, "?") {
+		separator = "&"
+	}
+	return target + separator + "notice=" + notice
 }
 
 func buyHandler(w http.ResponseWriter, r *http.Request) {
@@ -467,6 +503,7 @@ func musteriProfilHandler(w http.ResponseWriter, r *http.Request) {
 
 // ─── Checkout ───────────────────────────────────────────────────────────────
 func checkoutHandler(w http.ResponseWriter, r *http.Request) {
+	// Sipariş oluşturmak için müşteri oturumu zorunlu; böylece sipariş müşteri ve adresle ilişkilendirilebilir.
 	m, ok := getMusteriSession(r)
 	if !ok {
 		http.Redirect(w, r, "/musteri/giris?redirect=/checkout", http.StatusFound)
@@ -485,12 +522,13 @@ func checkoutHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// POST: siparişi kaydet
+	// POST isteği geldiğinde artık kullanıcı siparişi onaylamıştır; adres ve stok kayıtları bu akışta yapılır.
 	adresID := r.FormValue("adres_id")
 	var finalAdresID int
 
 	if adresID == "new" || adresID == "" {
-		// Yeni adres kaydet
+		// Kullanıcı yeni adres girdiyse önce adresler tablosuna kaydedilir.
+		// Daha sonra sipariş bu adresin id'si ile ilişkilendirilir.
 		bas := strings.TrimSpace(r.FormValue("baslik"))
 		il := strings.TrimSpace(r.FormValue("il"))
 		ilce := strings.TrimSpace(r.FormValue("ilce"))
@@ -519,7 +557,8 @@ func checkoutHandler(w http.ResponseWriter, r *http.Request) {
 		finalAdresID, _ = strconv.Atoi(adresID)
 	}
 
-	// Transaction ile stok düş + sipariş oluştur
+	// Stok düşme ve sipariş oluşturma tek transaction içinde yapılır.
+	// Bir adım hata verirse Rollback çalışır ve yarım sipariş kaydı oluşmaz.
 	tx, err := db.Begin()
 	if err != nil {
 		tmpl.ExecuteTemplate(w, "checkout.html", CheckoutData{Musteri: m, Adresler: adresler, Items: items, Total: total, Error: "Veritabanı hatası."})
@@ -529,6 +568,8 @@ func checkoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	for id, qty := range cart {
 		var stock int
+		// FOR UPDATE aynı ürüne aynı anda iki sipariş gelirse stok satırını kilitler.
+		// Böylece stok 1 iken iki kişinin aynı ürünü satın alması engellenir.
 		err := tx.QueryRow("SELECT stok FROM public.products WHERE id=$1 FOR UPDATE", id).Scan(&stock)
 		if err != nil || stock < qty {
 			tmpl.ExecuteTemplate(w, "checkout.html", CheckoutData{Musteri: m, Adresler: adresler, Items: items, Total: total, Error: "Yetersiz stok! Sepetinizi kontrol edin."})
@@ -538,6 +579,7 @@ func checkoutHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var sipID int
+	// Önce siparişin ana kaydı açılır; ürün detayları siparis_urunleri tablosunda bu id'ye bağlanır.
 	err = tx.QueryRow(`INSERT INTO public.siparisler (musteri_id,adres_id,toplam_tutar,durum) VALUES ($1,$2,$3,'tamamlandi') RETURNING id`,
 		m.ID, finalAdresID, total).Scan(&sipID)
 	if err != nil {
@@ -547,6 +589,8 @@ func checkoutHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, item := range items {
+		// Sipariş detayında ürün adı ve birim fiyat ayrıca saklanır.
+		// Ürün sonradan silinse veya fiyatı değişse bile eski sipariş doğru kalır.
 		tx.Exec(`INSERT INTO public.siparis_urunleri (siparis_id,urun_id,urun_isim,adet,birim_fiyat) VALUES ($1,$2,$3,$4,$5)`,
 			sipID, item.Product.ID, item.Product.Name, item.Qty, item.Product.Price)
 	}
@@ -579,6 +623,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func adminHandler(w http.ResponseWriter, r *http.Request) {
+	// Admin panel tek ekranda ürün, kategori, müşteri ve sipariş özetini gösterir.
+	// Bu yüzden panel açılırken birden fazla tablodan veri toplanıyor.
 	if !isAdmin(r) {
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
@@ -626,6 +672,8 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateHandler(w http.ResponseWriter, r *http.Request) {
+	// Admin stok ve fiyatı güncellediğinde products tablosu doğrudan güncellenir.
+	// Listeleme sayfası aynı tabloyu okuduğu için değişiklik kullanıcı tarafına da yansır.
 	if !isAdmin(r) {
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
@@ -645,6 +693,7 @@ func updateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func addProductHandler(w http.ResponseWriter, r *http.Request) {
+	// Yeni ürün admin panelden eklenir; kategori ve görsel bilgisi de aynı kayıt içinde tutulur.
 	if !isAdmin(r) {
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
@@ -682,6 +731,8 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func addCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	// Kategori tekrarını engellemek için eklemeden önce aynı isim var mı kontrol edilir.
+	// Bu yöntem mevcut veritabanında UNIQUE constraint olmasa bile güvenli çalışır.
 	if !isAdmin(r) {
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
@@ -689,7 +740,12 @@ func addCategoryHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		name := strings.TrimSpace(r.FormValue("name"))
 		if name != "" {
-			_, err := db.Exec(`INSERT INTO public.categories (isim) VALUES ($1) ON CONFLICT (isim) DO NOTHING`, name)
+			_, err := db.Exec(`
+				INSERT INTO public.categories (isim)
+				SELECT $1
+				WHERE NOT EXISTS (
+					SELECT 1 FROM public.categories WHERE LOWER(isim)=LOWER($1)
+				)`, name)
 			if err != nil {
 				log.Println("Category insert error:", err)
 			}
@@ -714,6 +770,7 @@ func deleteCategoryHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func editCategoryHandler(w http.ResponseWriter, r *http.Request) {
+	// Kategori adı düzenlenirken başka kategoriyle aynı isme çakışmaması kontrol edilir.
 	if !isAdmin(r) {
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
@@ -722,7 +779,13 @@ func editCategoryHandler(w http.ResponseWriter, r *http.Request) {
 		id, _ := strconv.Atoi(r.FormValue("id"))
 		name := strings.TrimSpace(r.FormValue("name"))
 		if name != "" {
-			_, err := db.Exec("UPDATE public.categories SET isim = $1 WHERE id = $2", name, id)
+			_, err := db.Exec(`
+				UPDATE public.categories
+				SET isim = $1
+				WHERE id = $2
+				AND NOT EXISTS (
+					SELECT 1 FROM public.categories WHERE LOWER(isim)=LOWER($1) AND id<>$2
+				)`, name, id)
 			if err != nil {
 				log.Println("Category update error:", err)
 			}
@@ -732,6 +795,8 @@ func editCategoryHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ensureDatabaseSchema() error {
+	// Program ilk açıldığında gerekli tablolar yoksa oluşturulur.
+	// Böylece boş veritabanında uygulama "relation does not exist" hatasına düşmez.
 	queries := []string{
 		`CREATE TABLE IF NOT EXISTS public.products (
 			id SERIAL PRIMARY KEY, isim TEXT NOT NULL,
@@ -777,6 +842,7 @@ func ensureDatabaseSchema() error {
 		)`,
 	}
 	for _, q := range queries {
+		// Her CREATE TABLE ayrı çalıştırılır; hangi tabloda hata varsa logdan anlaşılır.
 		if _, err := db.Exec(q); err != nil {
 			return err
 		}
