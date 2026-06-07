@@ -1,10 +1,10 @@
-# Go Stok Takip Projesi
+# Go Programlama Stok Takip Projesi
 
 Bu proje Go dili ile yazılmış, PostgreSQL veritabanı kullanan web tabanlı bir stok takip ve sipariş uygulamasıdır.
 
-Uygulamada ürün listeleme, sepet, admin paneli, kategori yönetimi, müşteri kaydı, müşteri girişi, adres kaydı, checkout ve sipariş geçmişi bulunur.
+Projede ana sayfa, ürün listeleme, kategori filtreleme, sepet, stok kontrolü, satın alma, müşteri kayıt/giriş, adres kaydı, sipariş geçmişi ve admin paneli bulunur. Admin panelinden ürün ve kategori eklenebilir; eklenen ürünler listeleme sayfasına ve filtrelere otomatik gelir.
 
-## Proje Linki
+## GitHub
 
 ```text
 https://github.com/Orkunfbdev/Go-Programlama-Stok-Takip-Projesi
@@ -43,50 +43,59 @@ Yeni bilgisayarda şunlar kurulu olmalı:
 - PostgreSQL
 - Git
 
-PostgreSQL 18 kullanıldı. Farklı PostgreSQL sürümü kullanıyorsan aşağıdaki komutlarda `18` yazan klasör adını kendi sürümüne göre değiştir.
+Bu projede PostgreSQL 18 kullanıldı. Başka sürüm varsa komutlardaki `18` kısmını kendi PostgreSQL sürümüne göre değiştir.
 
-Örnek:
+Örnek PostgreSQL yolu:
 
 ```text
 C:\Program Files\PostgreSQL\18\bin
 ```
 
-PostgreSQL 17 ise:
+PostgreSQL 17 kuruluysa:
 
 ```text
 C:\Program Files\PostgreSQL\17\bin
 ```
 
-## 1. Projeyi İndir
+## Hızlı Kurulum
 
-Terminal veya PowerShell aç:
+PowerShell aç ve şu adımları sırayla uygula.
+
+### 1. Projeyi İndir
 
 ```powershell
 git clone https://github.com/Orkunfbdev/Go-Programlama-Stok-Takip-Projesi.git
 cd Go-Programlama-Stok-Takip-Projesi
 ```
 
-## 2. PostgreSQL Veritabanını Oluştur
+### 2. Veritabanını Oluştur
 
-Önce boş veritabanı oluştur:
+PostgreSQL şifren sorulursa kurulumda verdiğin `postgres` kullanıcısının şifresini yaz.
 
 ```powershell
 & "C:\Program Files\PostgreSQL\18\bin\createdb.exe" -U postgres stok_takip
 ```
 
-Komut şifre isterse PostgreSQL kurarken verdiğin `postgres` şifresini yaz.
+Eğer `database "stok_takip" already exists` hatası gelirse ve temiz kurulum yapmak istiyorsan dikkatli şekilde şu komutları kullanabilirsin:
 
-Eğer `database "stok_takip" already exists` benzeri bir hata görürsen bu adımı geçebilirsin.
+```powershell
+& "C:\Program Files\PostgreSQL\18\bin\dropdb.exe" -U postgres --if-exists stok_takip
+& "C:\Program Files\PostgreSQL\18\bin\createdb.exe" -U postgres stok_takip
+```
 
-## 3. SQL Dosyasını İçeri Aktar
+Bu işlem eski `stok_takip` veritabanını siler. İçinde önemli veri varsa silme.
 
-Tüm tabloları ve mevcut örnek verileri yüklemek için:
+### 3. SQL Yedeğini İçeri Aktar
+
+Tam çalışan proje verilerini yüklemek için bu dosyayı kullan:
 
 ```powershell
 & "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d stok_takip -f "database\stok_takip_backup.sql"
 ```
 
-Bu dosyanın içinde şu tablolar bulunur:
+Bu yedek dosyası tablo yapısını ve mevcut örnek verileri birlikte kurar.
+
+Yedekte bulunan ana tablolar:
 
 - `admin`
 - `products`
@@ -96,43 +105,63 @@ Bu dosyanın içinde şu tablolar bulunur:
 - `siparisler`
 - `siparis_urunleri`
 
-Sadece tablo yapısını kurmak istersen, veri olmadan şu dosyayı kullan:
+Sadece boş tablo yapısı istenirse şu dosya kullanılabilir:
 
 ```powershell
 & "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d stok_takip -f "database\schema.sql"
 ```
 
-Normal kullanım için önerilen dosya:
+Normal kurulum için önerilen dosya `database\stok_takip_backup.sql` dosyasıdır.
+
+### 4. Veritabanı Şifresini Ayarla
+
+Uygulama varsayılan olarak şu bağlantı bilgileriyle çalışır:
 
 ```text
-database\stok_takip_backup.sql
+host=127.0.0.1
+port=5432
+user=postgres
+password=5757
+dbname=stok_takip
+sslmode=disable
 ```
 
-## 4. Veritabanı Şifresini Kontrol Et
+Arkadaşının PostgreSQL şifresi `5757` değilse kodu değiştirmeden PowerShell'de şu komutu çalıştırabilir:
 
-Uygulama PostgreSQL bağlantısını `app/main.go` içindeki `connStr` satırından alır.
-
-Varsayılan bağlantı:
-
-```go
-connStr := "host=127.0.0.1 port=5432 user=postgres password=5757 dbname=stok_takip sslmode=disable"
+```powershell
+$env:DB_PASSWORD="POSTGRES_SIFRESI"
 ```
-
-Eğer PostgreSQL şifren `5757` değilse, `password=5757` kısmını kendi şifrenle değiştir.
 
 Örnek:
 
-```go
-password=BENIM_SIFREM
+```powershell
+$env:DB_PASSWORD="1234"
 ```
 
-Veritabanı adını değiştirme. Kod şu veritabanını bekliyor:
+İstersen diğer ayarlar da ortam değişkeniyle verilebilir:
 
-```text
-stok_takip
+```powershell
+$env:DB_HOST="127.0.0.1"
+$env:DB_PORT="5432"
+$env:DB_USER="postgres"
+$env:DB_PASSWORD="5757"
+$env:DB_NAME="stok_takip"
+$env:DB_SSLMODE="disable"
 ```
 
-## 5. Uygulamayı Çalıştır
+Tek satır bağlantı adresi kullanmak istersen:
+
+```powershell
+$env:DATABASE_URL="postgres://postgres:5757@127.0.0.1:5432/stok_takip?sslmode=disable"
+```
+
+### 5. Go Paketlerini İndir
+
+```powershell
+go mod download
+```
+
+### 6. Uygulamayı Çalıştır
 
 Proje klasörünün içindeyken:
 
@@ -140,62 +169,178 @@ Proje klasörünün içindeyken:
 go run ./app
 ```
 
-Alternatif olarak:
-
-```powershell
-cd app
-go run .
-```
-
-Başarılı olursa terminalde buna benzer çıktı görürsün:
+Başarılı olursa terminalde şu çıktı görünür:
 
 ```text
 Stok takip sunucusu: http://localhost:8080
 ```
 
-Sonra tarayıcıdan aç:
+Tarayıcıdan aç:
 
 ```text
 http://localhost:8080
 ```
 
-## Admin Paneli
+## Giriş Bilgileri
 
-Admin giriş sayfası:
+Admin paneli:
 
 ```text
 http://localhost:8080/login
 ```
 
-Admin kullanıcı bilgileri SQL yedeğindeki `public.admin` tablosundan gelir.
+SQL yedeğinde gelen admin hesabı:
+
+```text
+Kullanıcı adı: orkunorkun
+Şifre: 2005
+```
+
+Müşteri tarafında yeni hesap oluşturmak için:
+
+```text
+http://localhost:8080/musteri/kayit
+```
+
+## Projede Ne Var?
+
+- Ana sayfada öne çıkan ürünler gösterilir.
+- `Sistemler` sayfasında ürünler listelenir.
+- Kategoriler veritabanından gelir.
+- Admin panelden eklenen ürünler kullanıcı tarafında görünür.
+- Sepete ekleme ve sepetten çıkarma işlemlerinde bildirim çıkar.
+- Stokta olmayan ürün sepete eklenmez.
+- Satın alma tamamlanınca ürün stoku düşer.
+- Müşteri kayıt, giriş, adres ve sipariş geçmişi vardır.
+- SQL yedeği başka bilgisayarda aynı verilerle projeyi ayağa kaldırır.
+
+## SQL Dosyaları
+
+SQL dosyaları `database` klasöründedir.
+
+```text
+database/schema.sql
+database/stok_takip_backup.sql
+database/README.md
+```
+
+`schema.sql` sadece tablo yapısını içerir.
+
+`stok_takip_backup.sql` tablo yapısını ve mevcut verileri içerir. Arkadaşın projeyi kendi bilgisayarında tam haliyle açacaksa bu dosyayı import etmelidir.
+
+## Antigravity / AI Agent İçin Kurulum Talimatı
+
+Aşağıdaki metin direkt Antigravity veya başka bir yapay zeka kod editörüne verilebilir:
+
+```text
+Bu Go + PostgreSQL stok takip projesini Windows bilgisayarda çalıştır.
+
+Repo:
+https://github.com/Orkunfbdev/Go-Programlama-Stok-Takip-Projesi
+
+Yapılacaklar:
+
+1. Repoyu indir:
+   git clone https://github.com/Orkunfbdev/Go-Programlama-Stok-Takip-Projesi.git
+   cd Go-Programlama-Stok-Takip-Projesi
+
+2. PostgreSQL'in bin klasörünü bul.
+   Örnek:
+   C:\Program Files\PostgreSQL\18\bin
+
+3. PostgreSQL içinde stok_takip adında veritabanı oluştur:
+   & "C:\Program Files\PostgreSQL\18\bin\createdb.exe" -U postgres stok_takip
+
+4. Eğer veritabanı zaten varsa ve temiz kurulum isteniyorsa:
+   & "C:\Program Files\PostgreSQL\18\bin\dropdb.exe" -U postgres --if-exists stok_takip
+   & "C:\Program Files\PostgreSQL\18\bin\createdb.exe" -U postgres stok_takip
+
+5. Tam SQL yedeğini import et:
+   & "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d stok_takip -f "database\stok_takip_backup.sql"
+
+6. PostgreSQL şifresi 5757 değilse uygulamayı çalıştırmadan önce:
+   $env:DB_PASSWORD="POSTGRES_SIFRESI"
+
+7. Go bağımlılıklarını indir:
+   go mod download
+
+8. Uygulamayı çalıştır:
+   go run ./app
+
+9. Tarayıcıda aç:
+   http://localhost:8080
+
+10. Admin paneli için:
+    http://localhost:8080/login
+    Kullanıcı adı: orkunorkun
+    Şifre: 2005
+
+Beklenen sonuç:
+- Ana sayfa açılmalı.
+- Sistemler sayfasında ürünler görünmeli.
+- Kategori filtreleri çalışmalı.
+- Sepete ekleme ve çıkarma çalışmalı.
+- Admin panelinden ürün/kategori yönetimi çalışmalı.
+```
+
+## Kontrol Komutları
+
+Kodun derlenip derlenmediğini kontrol etmek için:
+
+```powershell
+go test ./...
+```
+
+Veritabanında ürünlerin geldiğini kontrol etmek için:
+
+```powershell
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d stok_takip -c "SELECT id, isim, stok, kategori FROM public.products ORDER BY id;"
+```
+
+Tablo sayısını kontrol etmek için:
+
+```powershell
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d stok_takip -c "SELECT COUNT(*) FROM public.products;"
+```
 
 ## Sık Karşılaşılan Hatalar
 
 ### `psql` veya `createdb` bulunamadı
 
-PostgreSQL yolu farklı olabilir. Şu klasörü kontrol et:
+PostgreSQL sürüm yolu farklı olabilir. Şu klasörü kontrol et:
 
 ```text
 C:\Program Files\PostgreSQL
 ```
 
-Hangi sürüm varsa komuttaki `18` kısmını ona göre değiştir.
+Komutlardaki `18` kısmını bilgisayarda kurulu olan sürümle değiştir.
 
 ### `password authentication failed`
 
-`app/main.go` içindeki `password=5757` kısmı PostgreSQL şifrenle aynı değil demektir. Kendi PostgreSQL şifreni yaz.
+PostgreSQL şifresi uygulamadaki varsayılan `5757` değildir.
+
+Çözüm:
+
+```powershell
+$env:DB_PASSWORD="KENDI_POSTGRES_SIFREN"
+go run ./app
+```
 
 ### `database "stok_takip" does not exist`
 
-Veritabanı oluşturulmamış demektir. Şunu çalıştır:
+Veritabanı oluşturulmamıştır.
+
+Çözüm:
 
 ```powershell
 & "C:\Program Files\PostgreSQL\18\bin\createdb.exe" -U postgres stok_takip
 ```
 
-### `relation public.products does not exist`
+### `relation "public.products" does not exist`
 
-SQL dosyası içeri aktarılmamış demektir. Şunu çalıştır:
+SQL yedeği import edilmemiştir.
+
+Çözüm:
 
 ```powershell
 & "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -d stok_takip -f "database\stok_takip_backup.sql"
@@ -203,7 +348,7 @@ SQL dosyası içeri aktarılmamış demektir. Şunu çalıştır:
 
 ### `listen tcp :8080: bind`
 
-8080 portu başka bir program tarafından kullanılıyor olabilir. O programı kapat veya `app/main.go` içindeki şu satırdan portu değiştir:
+8080 portu başka bir uygulama tarafından kullanılıyordur. O uygulamayı kapat veya `app/main.go` içindeki portu değiştir:
 
 ```go
 log.Fatal(http.ListenAndServe(":8080", nil))
@@ -221,48 +366,10 @@ Sonra şu adresten aç:
 http://localhost:8081
 ```
 
-## Yapay Zekaya Verilecek Kurulum Görevi
-
-Bu projeyi başka bir bilgisayarda yapay zekaya kurdurmak istersen aşağıdaki metni direkt verebilirsin:
-
-```text
-Bu Go + PostgreSQL stok takip projesini kur.
-
-1. Repoyu indir:
-   https://github.com/Orkunfbdev/Go-Programlama-Stok-Takip-Projesi
-
-2. PostgreSQL'de stok_takip adında veritabanı oluştur.
-
-3. database/stok_takip_backup.sql dosyasını stok_takip veritabanına import et.
-
-4. app/main.go içindeki connStr satırında PostgreSQL şifresini kontrol et.
-
-5. Proje kökünden go run ./app komutunu çalıştır.
-
-6. Siteyi http://localhost:8080 adresinde aç.
-
-Eğer psql veya createdb bulunamazsa C:\Program Files\PostgreSQL\<surum>\bin klasörünü kullan.
-```
-
-## Geliştirme Notları
+## Notlar
 
 - Ana Go kodu `app/main.go` dosyasındadır.
-- HTML sayfaları `app/templates` klasöründedir.
+- HTML dosyaları `app/templates` klasöründedir.
 - SQL dosyaları `database` klasöründedir.
-- `database/schema.sql` sadece tablo yapısını içerir.
-- `database/stok_takip_backup.sql` tablo yapısı ve mevcut verileri içerir.
-- Derlenmiş `.exe` dosyaları GitHub'a yüklenmez.
-
-## Test
-
-Kodun derlenip derlenmediğini kontrol etmek için:
-
-```powershell
-go test ./...
-```
-
-Ek kontrol için:
-
-```powershell
-go vet ./...
-```
+- Derlenmiş `.exe`, log ve geçici dosyalar GitHub'a yüklenmez.
+- Arkadaşının bilgisayarında tam verili kurulum için `database/stok_takip_backup.sql` kullanılmalıdır.

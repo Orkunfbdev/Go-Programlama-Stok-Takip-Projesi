@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -850,9 +851,33 @@ func ensureDatabaseSchema() error {
 	return nil
 }
 
+func envOrDefault(key, fallback string) string {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return fallback
+	}
+	return value
+}
+
+func databaseConnString() string {
+	// Arkadasinin bilgisayarinda sifre farkliysa kodu degistirmeden DB_PASSWORD verilebilir.
+	if url := strings.TrimSpace(os.Getenv("DATABASE_URL")); url != "" {
+		return url
+	}
+	return fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+		envOrDefault("DB_HOST", "127.0.0.1"),
+		envOrDefault("DB_PORT", "5432"),
+		envOrDefault("DB_USER", "postgres"),
+		envOrDefault("DB_PASSWORD", "5757"),
+		envOrDefault("DB_NAME", "stok_takip"),
+		envOrDefault("DB_SSLMODE", "disable"),
+	)
+}
+
 func main() {
 	var err error
-	connStr := "host=127.0.0.1 port=5432 user=postgres password=5757 dbname=stok_takip sslmode=disable"
+	connStr := databaseConnString()
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal("DB Open Error:", err)
