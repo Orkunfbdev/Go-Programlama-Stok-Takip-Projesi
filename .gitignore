@@ -4,3 +4,4 @@
 .env.*
 tmp/
 dist/
+tmp-canva-assets/

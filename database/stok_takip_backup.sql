@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict v2x1xL2vVom64hVKRWSfYZzZIMMwTyDQ6OCmTreJNyP5We3QoRDErdxas9x2RQd
+\restrict oegAe6APc9VA9x7nmT3yGFEHbKRuShkJJYZX3wkzqb1ynEMLuJfpcelZ3lxAFhc
 
 -- Dumped from database version 18.1
 -- Dumped by pg_dump version 18.1
@@ -323,6 +323,7 @@ COPY public.admin (id, "kullanıcıadı", "şifre") FROM stdin;
 
 COPY public.adresler (id, musteri_id, baslik, il, ilce, mahalle, adres_satir, posta_kodu, varsayilan) FROM stdin;
 1	1	kayabası mah 75.yıl caddesi	istanbul	başakşehir	kayabası	b 27 d2	34900	t
+2	3	kayabası mah 75.yıl caddesi	istanbul	istanbul	kayabası	b 27 d2	34900	t
 \.
 
 
@@ -342,6 +343,8 @@ COPY public.categories (id, isim) FROM stdin;
 
 COPY public.musteriler (id, ad, soyad, email, sifre, tel, olusturulma) FROM stdin;
 1	orkun	teke	orkunhulya34@gmail.com	d614bf06cbefa888cc9f4743c478abb5798cfe60a562a21615bb70ba7258ddd7	5383814957	2026-06-06 13:52:59.360452+03
+2	Demo	Musteri	demo@ornek.com	demo		2026-06-06 21:13:31.458885+03
+3	orkun	teke	hulyaorkun3457@gmail.com	d614bf06cbefa888cc9f4743c478abb5798cfe60a562a21615bb70ba7258ddd7	5383814957	2026-06-07 23:48:44.343959+03
 \.
 
 
@@ -350,11 +353,12 @@ COPY public.musteriler (id, ad, soyad, email, sifre, tel, olusturulma) FROM stdi
 --
 
 COPY public.products (id, isim, fiyat, stok, kategori, resim, "tanım") FROM stdin;
-2	rtx 2090	2500	2	Bilgisayar	https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcQV1ehdC2ZRpZ9D3I89rtgZdjBbME7VDS4SfDIlxw7frwaqKX8z2oPGOMjSVvJv6_G7NQxF-dfzoA6J6H60ddttBYR_v-Bojg	oyun canavarı
-1	rtx 5090	55000	10	Telefon	https://static.sinerji.gen.tr/Images/MD/L9Q-39f4b516a0a7e5344fe9a30b8cb9721a.jpg	oyun canavarı
-3	iPhone 15 Pro	64999	12	Telefon	https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=900&auto=format&fit=crop	A17 Pro işlemcili premium akıllı telefon
 4	Gaming Masaüstü Bilgisayar	42999	6	Bilgisayar	https://images.unsplash.com/photo-1587831990711-23ca6441447b?q=80&w=900&auto=format&fit=crop	RTX ekran kartlı yüksek performanslı masaüstü sistem
 5	Lenovo IdeaPad Laptop	24999	9	Bilgisayar	https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=900&auto=format&fit=crop	Günlük kullanım ve okul projeleri için taşınabilir laptop
+6	rtx 2050	100000	5	Bilgisayar	https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxp77aHL4gbWr5E4hXC20d6g6925k0kftVXA&s	oyun canavarı
+2	rtx 2090	2500	0	Bilgisayar	https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcQV1ehdC2ZRpZ9D3I89rtgZdjBbME7VDS4SfDIlxw7frwaqKX8z2oPGOMjSVvJv6_G7NQxF-dfzoA6J6H60ddttBYR_v-Bojg	oyun canavarı
+1	rtx 5090	55000	9	Telefon	https://static.sinerji.gen.tr/Images/MD/L9Q-39f4b516a0a7e5344fe9a30b8cb9721a.jpg	oyun canavarı
+3	iPhone 15 Pro	64999	11	Telefon	https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=900&auto=format&fit=crop	A17 Pro işlemcili premium akıllı telefon
 \.
 
 
@@ -365,6 +369,10 @@ COPY public.products (id, isim, fiyat, stok, kategori, resim, "tanım") FROM std
 COPY public.siparis_urunleri (id, siparis_id, urun_id, urun_isim, adet, birim_fiyat) FROM stdin;
 1	1	2	rtx 2090	1	2500.00
 2	2	2	rtx 2090	1	2500.00
+3	3	2	rtx 2090	1	2500.00
+4	4	2	rtx 2090	1	2500.00
+5	5	1	rtx 5090	1	55000.00
+6	6	3	iPhone 15 Pro	1	64999.00
 \.
 
 
@@ -375,6 +383,10 @@ COPY public.siparis_urunleri (id, siparis_id, urun_id, urun_isim, adet, birim_fi
 COPY public.siparisler (id, musteri_id, adres_id, toplam_tutar, durum, olusturulma) FROM stdin;
 1	1	1	2500.00	tamamlandi	2026-06-06 13:53:40.259458+03
 2	1	1	2500.00	tamamlandi	2026-06-06 14:10:23.483924+03
+3	1	1	2500.00	tamamlandi	2026-06-07 23:46:42.669279+03
+4	1	1	2500.00	tamamlandi	2026-06-07 23:46:46.677018+03
+5	1	1	55000.00	tamamlandi	2026-06-07 23:47:18.415947+03
+6	3	2	64999.00	tamamlandi	2026-06-07 23:49:16.983549+03
 \.
 
 
@@ -389,42 +401,42 @@ SELECT pg_catalog.setval('public.admin_id_seq', 1, true);
 -- Name: adresler_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.adresler_id_seq', 1, true);
+SELECT pg_catalog.setval('public.adresler_id_seq', 2, true);
 
 
 --
 -- Name: categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.categories_id_seq', 3, true);
+SELECT pg_catalog.setval('public.categories_id_seq', 4, true);
 
 
 --
 -- Name: musteriler_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.musteriler_id_seq', 1, true);
+SELECT pg_catalog.setval('public.musteriler_id_seq', 3, true);
 
 
 --
 -- Name: products _id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public."products _id_seq"', 5, true);
+SELECT pg_catalog.setval('public."products _id_seq"', 6, true);
 
 
 --
 -- Name: siparis_urunleri_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.siparis_urunleri_id_seq', 2, true);
+SELECT pg_catalog.setval('public.siparis_urunleri_id_seq', 6, true);
 
 
 --
 -- Name: siparisler_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.siparisler_id_seq', 2, true);
+SELECT pg_catalog.setval('public.siparisler_id_seq', 6, true);
 
 
 --
@@ -535,5 +547,5 @@ ALTER TABLE ONLY public.siparisler
 -- PostgreSQL database dump complete
 --
 
-\unrestrict v2x1xL2vVom64hVKRWSfYZzZIMMwTyDQ6OCmTreJNyP5We3QoRDErdxas9x2RQd
+\unrestrict oegAe6APc9VA9x7nmT3yGFEHbKRuShkJJYZX3wkzqb1ynEMLuJfpcelZ3lxAFhc
 
